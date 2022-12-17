@@ -1,6 +1,8 @@
 import 'package:local_db/note.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:local_db/common/encrypt.dart';
 
 class DatabaseHelper {
   static DatabaseHelper? _databaseHelper;
@@ -23,15 +25,20 @@ class DatabaseHelper {
     var path = await getDatabasesPath();
     var db = openDatabase(
       join(path, 'note_db.db'),
-      onCreate: (db, version) async {
-        await db.execute('''CREATE TABLE $_tableName (
-            id INTEGER PRIMARY KEY,
-            title TEXT, description TEXT
-          )''');
-      },
+      onCreate: _onCreate,
       version: 1,
+      password: encrypt('secure password'),
     );
     return db;
+  }
+
+  void _onCreate(Database db, int version) async {
+    await db.execute(
+      '''CREATE TABLE $_tableName (
+            id INTEGER PRIMARY KEY,
+            title TEXT, description TEXT
+          )''',
+    );
   }
 
   Future<void> insertNote(Note note) async {
